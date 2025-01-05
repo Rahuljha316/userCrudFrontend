@@ -5,12 +5,23 @@ import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableCap
 import AddUserDialog from "./add-user";
 import UpdateUserDialog from "./update-user";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Card } from "./ui/card";
+import { Loader2 } from "lucide-react";
 
 const UserTable = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(2);
+    const [pageSize, setPageSize] = useState(5);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("");
     const [sortKey, setSortKey] = useState("createdAt");
@@ -19,7 +30,7 @@ const UserTable = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
-    const [debouncedSearch, setDebouncedSearch] = useState("")
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [userForm, setUserForm] = useState({
         userName: "",
         userEmail: "",
@@ -36,6 +47,7 @@ const UserTable = () => {
     });
 
     const { toast } = useToast();
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -54,22 +66,25 @@ const UserTable = () => {
             setData(result.data || []);
             setTotalPages(Math.ceil((result.meta?.total || 0) / pageSize));
         } catch (error) {
-            toast(error.message);
+            toast({
+                variant: "destructive",
+                title: "Error fetching data",
+                description: error.message
+            });
         } finally {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedSearch(search)
-        }, 500)
+            setDebouncedSearch(search);
+        }, 500);
 
-        return () => clearTimeout(timer)
+        return () => clearTimeout(timer);
+    }, [search]);
 
-    }, [search])
     useEffect(() => {
-
-
         fetchData();
     }, [page, pageSize, debouncedSearch, filter, sortKey, sortOrder]);
 
@@ -77,14 +92,16 @@ const UserTable = () => {
         try {
             await axios.delete(`http://localhost:5000/api/users/${selectedUser.userId}`);
             toast({
-                title: "User Delete Successfully"
-            })
+                title: "User deleted successfully",
+                variant: "success"
+            });
             setIsUpdateDialogOpen(false);
-            fetchData()
+            fetchData();
         } catch (error) {
             toast({
-                title: "Failed to add User",
-                description: error.response.data.error,
+                variant: "destructive",
+                title: "Failed to delete user",
+                description: error.response?.data?.error || error.message,
             });
         }
     };
@@ -104,7 +121,11 @@ const UserTable = () => {
                 enabled: result.data.enabled,
             });
         } catch (error) {
-            toast(error.message);
+            toast({
+                variant: "destructive",
+                title: "Error fetching user details",
+                description: error.message
+            });
         }
     };
 
@@ -114,8 +135,9 @@ const UserTable = () => {
             const response = await axios.post("http://localhost:5000/api/users", userForm);
             if (response.status === 200 || response.status === 201) {
                 toast({
-                    title: 'User Added Successfully'
-                })
+                    title: 'User added successfully',
+                    variant: "success"
+                });
                 setIsDialogOpen(false);
                 setUserForm({
                     userName: "",
@@ -125,42 +147,36 @@ const UserTable = () => {
                     enabled: true,
                 });
                 setPage(0);
-            } else {
-                toast({
-                    title: "Failed to add User",
-                    description: error.message,
-                });
+                fetchData();
             }
         } catch (error) {
             console.error("Error submitting user form:", error);
             toast({
-                title: "Failed to add User",
-                description: error.response.data.error,
+                variant: "destructive",
+                title: "Failed to add user",
+                description: error.response?.data?.error || error.message,
             });
         }
     };
+
     const handleUserUpdate = async (e) => {
         e.preventDefault();
         try {
             const response = await axios.put(`http://localhost:5000/api/users/${selectedUser.userId}`, userUpdateForm);
             if (response.status === 200 || response.status === 201) {
                 toast({
-                    title: 'User Updated Successfully'
-                })
-                setIsDialogOpen(false);
-                fetchData()
-                setPage(0);
-            } else {
-                toast({
-                    title: "Failed to add User",
-                    description: error.message,
+                    title: 'User updated successfully',
+                    variant: "success"
                 });
+                setIsUpdateDialogOpen(false);
+                fetchData();
             }
         } catch (error) {
-            console.error("Error submitting user form:", error);
+            console.error("Error updating user:", error);
             toast({
-                title: "Failed to add User",
-                description: error.response.data.error,
+                variant: "destructive",
+                title: "Failed to update user",
+                description: error.response?.data?.error || error.message,
             });
         }
     };
@@ -186,134 +202,150 @@ const UserTable = () => {
         { accessorKey: "permalink", header: "Permalink" },
         { accessorKey: "userName", header: "Name" },
         { accessorKey: "userEmail", header: "Email" },
-        // { accessorKey: "enabled", header: "Enabled" },
         { accessorKey: "createdAt", header: "Created At" },
         { accessorKey: "updatedAt", header: "Updated At" },
     ];
 
     return (
-        <div className="flex items-center justify-center mt-8">
-            <div className="space-y-4">
-                <div className="flex space-x-2">
-                    <input
-                        type="text"
-                        placeholder="Search User..."
-                        className="input"
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            setPage(0);
-                        }}
-                    />
-                    <AddUserDialog
-                        isDialogOpen={isDialogOpen}
-                        setIsDialogOpen={setIsDialogOpen}
-                        handleSubmit={handleSubmit}
-                        userForm={userForm}
-                        handleInputChange={handleInputChange}
-                    />
-                    <UpdateUserDialog
-                        isDialogOpen={isUpdateDialogOpen}
-                        setIsDialogOpen={setIsUpdateDialogOpen}
-                        handleUserUpdate={handleUserUpdate}
-                        userForm={userUpdateForm}
-                        handleInputChange={handleUpdateInputChange}
-                        selectedUser={selectedUser}
-                        handleDelete={handleDelete}
-                    />
+        <div className="container mx-auto px-4 py-8">
+            <Card className="p-6">
+                <div className="mb-6 flex items-center justify-between">
+                    <div className="flex-1 max-w-sm">
+                        <Input
+                            type="text"
+                            placeholder="Search users..."
+                            value={search}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(0);
+                            }}
+                            className="w-full"
+                        />
+                    </div>
+                    <div className="flex space-x-4">
+                        <AddUserDialog
+                            isDialogOpen={isDialogOpen}
+                            setIsDialogOpen={setIsDialogOpen}
+                            handleSubmit={handleSubmit}
+                            userForm={userForm}
+                            handleInputChange={handleInputChange}
+                        />
+                        <UpdateUserDialog
+                            isDialogOpen={isUpdateDialogOpen}
+                            setIsDialogOpen={setIsUpdateDialogOpen}
+                            handleUserUpdate={handleUserUpdate}
+                            userForm={userUpdateForm}
+                            handleInputChange={handleUpdateInputChange}
+                            selectedUser={selectedUser}
+                            handleDelete={handleDelete}
+                        />
+                    </div>
                 </div>
 
-                <Table>
-                    <TableCaption>User Data</TableCaption>
-                    <TableHeader>
-                        <TableRow>
-                            {columns.map((column) => (
-                                <TableHead key={column.accessorKey}>
-                                    <button
-                                        className="font-bold"
-                                        onClick={() => {
-                                            const isAsc =
-                                                sortKey === column.accessorKey && sortOrder === "asc";
-                                            setSortKey(column.accessorKey);
-                                            setSortOrder(isAsc ? "desc" : "asc");
-                                        }}
-                                    >
-                                        {column.header}{" "}
-                                        {sortKey === column.accessorKey
-                                            ? sortOrder === "asc"
-                                                ? "↑"
-                                                : "↓"
-                                            : ""}
-                                    </button>
-                                </TableHead>
-                            ))}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="text-center">
-                                    Loading...
-                                </TableCell>
+                                {columns.map((column) => (
+                                    <TableHead key={column.accessorKey}>
+                                        <button
+                                            className="flex items-center space-x-1 font-bold hover:text-primary"
+                                            onClick={() => {
+                                                const isAsc = sortKey === column.accessorKey && sortOrder === "asc";
+                                                setSortKey(column.accessorKey);
+                                                setSortOrder(isAsc ? "desc" : "asc");
+                                            }}
+                                        >
+                                            <span>{column.header}</span>
+                                            {sortKey === column.accessorKey && (
+                                                <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
+                                            )}
+                                        </button>
+                                    </TableHead>
+                                ))}
                             </TableRow>
-                        ) : data.length > 0 ? (
-                            data.map((row) => (
-                                <TableRow key={row.userId} onClick={() => handleRowClick(row)}>
-                                    {columns.map((column) => (
-                                        <TableCell key={column.accessorKey}>
-                                            {row[column.accessorKey]}
-                                        </TableCell>
-                                    ))}
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                                        <div className="flex items-center justify-center">
+                                            <Loader2 className="h-6 w-6 animate-spin" />
+                                            <span className="ml-2">Loading...</span>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="text-center">
-                                    No data found.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-
-                <div className="flex justify-between items-center">
-                    <button
-                        disabled={page <= 0}
-                        onClick={() => setPage((prevPage) => Math.max(prevPage - 1, 0))}
-                    >
-                        Previous
-                    </button>
-                    <span>
-                        Page {page + 1} of {totalPages}
-                    </span>
-                    <button
-                        disabled={page + 1 >= totalPages}
-                        onClick={() => setPage((prevPage) => prevPage + 1)}
-                    >
-                        Next
-                    </button>
+                            ) : data.length > 0 ? (
+                                data.map((row) => (
+                                    <TableRow
+                                        key={row.userId}
+                                        onClick={() => handleRowClick(row)}
+                                        className="cursor-pointer hover:bg-muted"
+                                    >
+                                        {columns.map((column) => (
+                                            <TableCell key={column.accessorKey}>
+                                                {row[column.accessorKey]}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                                        No users found
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
 
-                <div className="flex items-center space-x-2 mt-4">
-                    <label htmlFor="pageSize" className="font-medium">
-                        Rows per page
-                    </label>
-                    <select
-                        id="pageSize"
-                        className="input"
-                        value={pageSize}
-                        onChange={(e) => {
-                            setPageSize(Number(e.target.value));
-                            setPage(0);
-                        }}
-                    >
-                        <option value={2}>2</option>
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                    </select>
+                <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                        <span className="text-sm text-muted-foreground">Rows per page</span>
+                        <Select
+                            value={pageSize.toString()}
+                            onValueChange={(value) => {
+                                setPageSize(Number(value));
+                                setPage(0);
+                            }}
+                        >
+                            <SelectTrigger className="w-[70px]">
+                                <SelectValue placeholder={pageSize} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[2, 5, 10, 20].map((size) => (
+                                    <SelectItem key={size} value={size.toString()}>
+                                        {size}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex items-center space-x-6">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage((p) => Math.max(0, p - 1))}
+                            disabled={page === 0}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {page + 1} of {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage((p) => p + 1)}
+                            disabled={page + 1 >= totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };
