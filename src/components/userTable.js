@@ -1,9 +1,10 @@
 'use client';
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableCaption } from "./ui/table";
-import { Button } from "@/components/ui/button";
 import AddUserDialog from "./add-user";
 import UpdateUserDialog from "./update-user";
+import { useToast } from "@/hooks/use-toast";
 
 const UserTable = () => {
     const [data, setData] = useState([]);
@@ -33,27 +34,28 @@ const UserTable = () => {
         enabled: true,
     });
 
+    const { toast } = useToast();
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const query = new URLSearchParams({
+                const query = {
                     limit: pageSize,
                     offset: page * pageSize,
                     search,
                     filter,
                     sortKey,
                     sortOrder,
-                });
+                };
 
-                const response = await fetch(`http://localhost:5000/api/users?${query.toString()}`);
-                const result = await response.json();
+                const response = await axios.get("http://localhost:5000/api/users", { params: query });
+                const result = response.data;
 
                 setData(result.data || []);
                 setTotalPages(Math.ceil((result.meta?.total || 0) / pageSize));
             } catch (error) {
-                console.error("Error fetching user data:", error);
+                toast(error.message);
             } finally {
                 setLoading(false);
             }
@@ -61,6 +63,80 @@ const UserTable = () => {
 
         fetchData();
     }, [page, pageSize, search, filter, sortKey, sortOrder]);
+
+    const handleDelete = async () => {
+        try {
+            await axios.delete(`http://localhost:5000/api/users/${selectedUser.userId}`);
+            setIsDialogOpen(false);
+            setPage(0);
+        } catch (error) {
+            console.error("Error deleting user:", error);
+        }
+    };
+
+    const handleRowClick = async (user) => {
+        try {
+            const response = await axios.get(`http://localhost:5000/api/users/${user.userId}`);
+            const result = response.data;
+
+            setSelectedUser(user);
+            setIsUpdateDialogOpen(true);
+            setUserUpdateForm({
+                userName: result.data.userName,
+                userEmail: result.data.userEmail,
+                userPassword: result.data.userPassword,
+                permalink: result.data.permalink,
+                enabled: result.data.enabled,
+            });
+        } catch (error) {
+            toast(error.message);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post("http://localhost:5000/api/users", userForm);
+            if (response.status === 200 || response.status === 201) {
+                setIsDialogOpen(false);
+                setUserForm({
+                    userName: "",
+                    userEmail: "",
+                    userPassword: "",
+                    permalink: "",
+                    enabled: true,
+                });
+                setPage(0);
+            } else {
+                toast({
+                    title: "Failed to add User",
+                    description: error.message,
+                });
+            }
+        } catch (error) {
+            console.error("Error submitting user form:", error);
+            toast({
+                title: "Failed to add User",
+                description: error.response.data.error,
+            });
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setUserForm((prevForm) => ({
+            ...prevForm,
+            [name]: value,
+        }));
+    };
+
+    const handleUpdateInputChange = (e) => {
+        const { name, value } = e.target;
+        setUserUpdateForm((prevForm) => ({
+            ...prevForm,
+            [name]: value,
+        }));
+    };
 
     const columns = [
         { accessorKey: "userId", header: "ID" },
@@ -71,87 +147,6 @@ const UserTable = () => {
         { accessorKey: "createdAt", header: "Created At" },
         { accessorKey: "updatedAt", header: "Updated At" },
     ];
-    const handleDelete = async () => {
-        try {
-            const response = await fetch(`http://localhost:5000/api/users/${selectedUser.userId}`, {
-                method: "DELETE",
-            });
-
-            if (response.ok) {
-                console.log("User deleted successfully");
-                setIsDialogOpen(false);
-                setPage(0); // Reload data
-            } else {
-                console.error("Error deleting user", response.statusText);
-            }
-        } catch (error) {
-            console.error("Error deleting user:", error);
-        }
-    };
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setUserForm((prevForm) => ({
-            ...prevForm,
-            [name]: value,
-        }));
-    };
-    const handleUpdateInputChange = (e) => {
-        const { name, value } = e.target;
-        setUserUpdateForm((prevForm) => ({
-            ...prevForm,
-            [name]: value,
-        }));
-    };
-    const handleRowClick = async (user) => {
-        try {
-            const response = await fetch(`http://localhost:5000/api/users/${user.userId}`);
-            const result = await response.json();
-            setSelectedUser(user);
-            setIsUpdateDialogOpen(true);
-            setUserUpdateForm({
-                userName: result.data.userName,
-                userEmail: result.data.userEmail,
-                userPassword: result.data.userPassword, // Not showing password on edit
-                permalink: result.data.permalink,
-                enabled: result.data.enabled,
-            });
-
-        } catch (error) {
-
-        }
-
-    };
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch("http://localhost:5000/api/users", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(userForm),
-            });
-            console.log(response)
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log("User added successfully", result);
-                setIsDialogOpen(false);
-                setUserForm({
-                    userName: "",
-                    userEmail: "",
-                    userPassword: "",
-                    permalink: "",
-                    enabled: true,
-                })
-                setPage(0);
-            } else {
-                console.error("Error adding user", response.statusText);
-            }
-        } catch (error) {
-            console.error("Error submitting user form:", error);
-        }
-    };
 
     return (
         <div className="flex items-center justify-center mt-8">
@@ -167,20 +162,12 @@ const UserTable = () => {
                             setPage(0);
                         }}
                     />
-                    {/* <AddUserDialog
-                        isDialogOpen={isDialogOpen}
-                        setIsDialogOpen={setIsDialogOpen}
-                        handleSubmit={handleSubmit}
-                        userForm={userForm}
-                        handleInputChange={handleInputChange}
-                    /> */}
                     <AddUserDialog
                         isDialogOpen={isDialogOpen}
                         setIsDialogOpen={setIsDialogOpen}
                         handleSubmit={handleSubmit}
                         userForm={userForm}
                         handleInputChange={handleInputChange}
-
                     />
                     <UpdateUserDialog
                         isDialogOpen={isUpdateDialogOpen}
