@@ -19,6 +19,7 @@ const UserTable = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [debouncedSearch, setDebouncedSearch] = useState("")
     const [userForm, setUserForm] = useState({
         userName: "",
         userEmail: "",
@@ -59,10 +60,18 @@ const UserTable = () => {
         }
     };
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search)
+        }, 500)
+
+        return () => clearTimeout(timer)
+
+    }, [search])
+    useEffect(() => {
 
 
         fetchData();
-    }, [page, pageSize, search, filter, sortKey, sortOrder]);
+    }, [page, pageSize, debouncedSearch, filter, sortKey, sortOrder]);
 
     const handleDelete = async () => {
         try {
