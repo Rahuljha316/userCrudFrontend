@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userForm, handleInputChange }) => {
+const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userForm, handleInputChange, handleDelete, handleUserUpdate }) => {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 
@@ -59,7 +59,8 @@ const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userFor
                             <DialogClose asChild>
                                 <Button variant="default">Cancel</Button>
                             </DialogClose>
-                            <Button type="submit">Submit</Button>
+                            <Button type="button" onClick={handleUserUpdate}>Update</Button>
+                            <Button onClick={handleDelete} type="button" variant="destructive" >Delete</Button>
                         </div>
                     </div>
                 </form>

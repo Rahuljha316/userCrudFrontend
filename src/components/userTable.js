@@ -35,31 +35,31 @@ const UserTable = () => {
     });
 
     const { toast } = useToast();
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const query = {
+                limit: pageSize,
+                offset: page * pageSize,
+                search,
+                filter,
+                sortKey,
+                sortOrder,
+            };
 
+            const response = await axios.get("http://localhost:5000/api/users", { params: query });
+            const result = response.data;
+
+            setData(result.data || []);
+            setTotalPages(Math.ceil((result.meta?.total || 0) / pageSize));
+        } catch (error) {
+            toast(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const query = {
-                    limit: pageSize,
-                    offset: page * pageSize,
-                    search,
-                    filter,
-                    sortKey,
-                    sortOrder,
-                };
 
-                const response = await axios.get("http://localhost:5000/api/users", { params: query });
-                const result = response.data;
-
-                setData(result.data || []);
-                setTotalPages(Math.ceil((result.meta?.total || 0) / pageSize));
-            } catch (error) {
-                toast(error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
 
         fetchData();
     }, [page, pageSize, search, filter, sortKey, sortOrder]);
@@ -67,10 +67,16 @@ const UserTable = () => {
     const handleDelete = async () => {
         try {
             await axios.delete(`http://localhost:5000/api/users/${selectedUser.userId}`);
-            setIsDialogOpen(false);
-            setPage(0);
+            toast({
+                title: "User Delete Successfully"
+            })
+            setIsUpdateDialogOpen(false);
+            fetchData()
         } catch (error) {
-            console.error("Error deleting user:", error);
+            toast({
+                title: "Failed to add User",
+                description: error.response.data.error,
+            });
         }
     };
 
@@ -98,6 +104,9 @@ const UserTable = () => {
         try {
             const response = await axios.post("http://localhost:5000/api/users", userForm);
             if (response.status === 200 || response.status === 201) {
+                toast({
+                    title: 'User Added Successfully'
+                })
                 setIsDialogOpen(false);
                 setUserForm({
                     userName: "",
@@ -106,6 +115,31 @@ const UserTable = () => {
                     permalink: "",
                     enabled: true,
                 });
+                setPage(0);
+            } else {
+                toast({
+                    title: "Failed to add User",
+                    description: error.message,
+                });
+            }
+        } catch (error) {
+            console.error("Error submitting user form:", error);
+            toast({
+                title: "Failed to add User",
+                description: error.response.data.error,
+            });
+        }
+    };
+    const handleUserUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.put(`http://localhost:5000/api/users/${selectedUser.userId}`, userUpdateForm);
+            if (response.status === 200 || response.status === 201) {
+                toast({
+                    title: 'User Updated Successfully'
+                })
+                setIsDialogOpen(false);
+                fetchData()
                 setPage(0);
             } else {
                 toast({
@@ -172,7 +206,7 @@ const UserTable = () => {
                     <UpdateUserDialog
                         isDialogOpen={isUpdateDialogOpen}
                         setIsDialogOpen={setIsUpdateDialogOpen}
-                        handleSubmit={handleSubmit}
+                        handleUserUpdate={handleUserUpdate}
                         userForm={userUpdateForm}
                         handleInputChange={handleUpdateInputChange}
                         selectedUser={selectedUser}
