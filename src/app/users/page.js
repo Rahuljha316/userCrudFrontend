@@ -1,9 +1,13 @@
 import UserList from "@/components/user-list"
+import UserTable from "@/components/userTable"
+// import DemoPage from "@/components/user-list-new"
 
 const UserPage = () => {
     return (
         <div>
-            <UserList />
+            {/* <UserList /> */}
+            <UserTable />
+            {/* <DemoPage /> */}
         </div>
     )
 }
