@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { Card } from "./ui/card";
 import { Loader2 } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 const UserTable = () => {
     const [data, setData] = useState([]);
@@ -284,7 +285,10 @@ const UserTable = () => {
                                     >
                                         {columns.map((column) => (
                                             <TableCell key={column.accessorKey}>
-                                                {row[column.accessorKey]}
+                                                {column.accessorKey === 'createdAt' || column.accessorKey === 'updatedAt'
+                                                    ? formatDate(row[column.accessorKey])
+                                                    : row[column.accessorKey]
+                                                }
                                             </TableCell>
                                         ))}
                                     </TableRow>
