@@ -2,69 +2,99 @@
 import React from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userForm, handleInputChange, handleDelete, handleUserUpdate }) => {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent>
-                <DialogTitle>Update User</DialogTitle>
-                <DialogDescription>
-                    Fill out the form to update user.
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogTitle className="text-xl font-semibold">Update User</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
+                    Fill out the form below to update the user's information.
                 </DialogDescription>
-                <form onSubmit={handleSubmit}>
-                    <div className="space-y-4">
-                        <div>
-                            <label htmlFor="userName" className="block mb-1 font-bold">User Name</label>
-                            <input
-                                type="text"
+                <form onSubmit={handleSubmit} className="mt-4">
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="userName">Username</Label>
+                            <Input
                                 id="userName"
+                                type="text"
                                 name="userName"
-                                placeholder="User Name"
-                                className="input"
+                                placeholder="Enter username"
                                 value={userForm.userName}
                                 onChange={handleInputChange}
+                                className="w-full"
                             />
                         </div>
-                        <div>
-                            <label htmlFor="userEmail" className="block mb-1 font-bold">Email</label>
-                            <input
-                                type="email"
+                        
+                        <div className="space-y-2">
+                            <Label htmlFor="userEmail">Email</Label>
+                            <Input
                                 id="userEmail"
+                                type="email"
                                 name="userEmail"
-                                placeholder="Email"
-                                className="input"
+                                placeholder="Enter email address"
                                 value={userForm.userEmail}
                                 onChange={handleInputChange}
+                                className="w-full"
                             />
                         </div>
-                        <div>
-                            <label htmlFor="permalink" className="block mb-1 font-bold">Perma Link</label>
-                            <input
-                                type="url"
+
+                        <div className="space-y-2">
+                            <Label htmlFor="permalink">Permalink</Label>
+                            <Input
                                 id="permalink"
+                                type="url"
                                 name="permalink"
-                                placeholder="Perma Link"
-                                className="input"
+                                placeholder="Enter permalink"
                                 value={userForm.permalink}
                                 onChange={handleInputChange}
+                                className="w-full"
                             />
                         </div>
-                        <div>
-                            <label htmlFor="enabled" className="mr-2 font-bold">Enabled</label>
-                            <input
-                                type="checkbox"
-                                id="enabled"
-                                name="enabled"
-                                checked={userForm.enabled}
-                                onChange={(e) => handleInputChange({ target: { name: 'enabled', value: e.target.checked } })}
-                            />
+
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="enabled" className="font-medium">
+                                Account Status
+                            </Label>
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="enabled"
+                                    name="enabled"
+                                    checked={userForm.enabled}
+                                    onCheckedChange={(checked) => 
+                                        handleInputChange({ target: { name: 'enabled', value: checked } })
+                                    }
+                                />
+                                <Label htmlFor="enabled" className="text-sm text-muted-foreground">
+                                    {userForm.enabled ? 'Enabled' : 'Disabled'}
+                                </Label>
+                            </div>
                         </div>
-                        <div className="flex justify-end space-x-2 mt-4">
+
+                        <div className="flex justify-end space-x-3 pt-4">
                             <DialogClose asChild>
-                                <Button variant="default">Cancel</Button>
+                                <Button variant="outline" className="w-24">
+                                    Cancel
+                                </Button>
                             </DialogClose>
-                            <Button type="button" onClick={handleUserUpdate}>Update</Button>
-                            <Button onClick={handleDelete} type="button" variant="destructive">Delete</Button>
+                            <Button 
+                                type="button" 
+                                onClick={handleUserUpdate}
+                                className="w-24"
+                            >
+                                Update
+                            </Button>
+                            <Button 
+                                onClick={handleDelete} 
+                                type="button" 
+                                variant="destructive"
+                                className="w-24"
+                            >
+                                Delete
+                            </Button>
                         </div>
                     </div>
                 </form>
