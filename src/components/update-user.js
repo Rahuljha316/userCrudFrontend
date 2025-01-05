@@ -1,12 +1,11 @@
 'use client';
-import React, { useState } from "react";
+import React from "react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userForm, handleInputChange, handleDelete, handleUserUpdate }) => {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-
             <DialogContent>
                 <DialogTitle>Update User</DialogTitle>
                 <DialogDescription>
@@ -14,42 +13,47 @@ const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userFor
                 </DialogDescription>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
-                        <input
-                            type="text"
-                            name="userName"
-                            placeholder="User Name"
-                            className="input"
-                            value={userForm.userName}
-                            onChange={handleInputChange}
-                        />
-                        <input
-                            type="email"
-                            name="userEmail"
-                            placeholder="Email"
-                            className="input"
-                            value={userForm.userEmail}
-                            onChange={handleInputChange}
-                        />
-                        <input
-                            type="password"
-                            name="userPassword"
-                            placeholder="Password"
-                            className="input"
-                            value={userForm.userPassword}
-                            onChange={handleInputChange}
-                        />
-                        <input
-                            type="url"
-                            name="permalink"
-                            placeholder="Perma Link"
-                            className="input"
-                            value={userForm.permalink}
-                            onChange={handleInputChange}
-                        />
                         <div>
-                            <label htmlFor="enabled" className="mr-2">Enabled</label>
+                            <label htmlFor="userName" className="block mb-1 font-bold">User Name</label>
+                            <input
+                                type="text"
+                                id="userName"
+                                name="userName"
+                                placeholder="User Name"
+                                className="input"
+                                value={userForm.userName}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="userEmail" className="block mb-1 font-bold">Email</label>
+                            <input
+                                type="email"
+                                id="userEmail"
+                                name="userEmail"
+                                placeholder="Email"
+                                className="input"
+                                value={userForm.userEmail}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="permalink" className="block mb-1 font-bold">Perma Link</label>
+                            <input
+                                type="url"
+                                id="permalink"
+                                name="permalink"
+                                placeholder="Perma Link"
+                                className="input"
+                                value={userForm.permalink}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="enabled" className="mr-2 font-bold">Enabled</label>
                             <input
                                 type="checkbox"
+                                id="enabled"
                                 name="enabled"
                                 checked={userForm.enabled}
                                 onChange={(e) => handleInputChange({ target: { name: 'enabled', value: e.target.checked } })}
@@ -60,7 +64,7 @@ const UpdateUserDialog = ({ isDialogOpen, setIsDialogOpen, handleSubmit, userFor
                                 <Button variant="default">Cancel</Button>
                             </DialogClose>
                             <Button type="button" onClick={handleUserUpdate}>Update</Button>
-                            <Button onClick={handleDelete} type="button" variant="destructive" >Delete</Button>
+                            <Button onClick={handleDelete} type="button" variant="destructive">Delete</Button>
                         </div>
                     </div>
                 </form>

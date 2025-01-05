@@ -177,7 +177,7 @@ const UserTable = () => {
         { accessorKey: "permalink", header: "Permalink" },
         { accessorKey: "userName", header: "Name" },
         { accessorKey: "userEmail", header: "Email" },
-        { accessorKey: "enabled", header: "Enabled" },
+        // { accessorKey: "enabled", header: "Enabled" },
         { accessorKey: "createdAt", header: "Created At" },
         { accessorKey: "updatedAt", header: "Updated At" },
     ];
